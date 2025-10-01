@@ -21,6 +21,9 @@
                     <h1 class="text-4xl font-bold text-primary-600 dark:text-white tracking-wider">
                         ARA COSMETIC
                     </h1>
+                    <h1 class="text-4xl font-bold text-primary-900 dark:text-white tracking-wider text-center">
+                        MEMBER
+                    </h1>
                 </a>
             </div>
 
