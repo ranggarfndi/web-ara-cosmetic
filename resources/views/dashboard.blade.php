@@ -16,7 +16,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Pelanggan</p>
-                        <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($totalCustomers) }}</p>
+                        <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($totalCustomers) }}</p>
                     </div>
                 </div>
 
@@ -40,7 +40,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Transaksi Hari Ini</p>
-                        <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($todayTransactions) }}</p>
+                        <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($todayTransactions) }}</p>
                     </div>
                 </div>
 
@@ -52,7 +52,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Pendapatan Hari Ini</p>
-                        <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">Rp {{ number_format($todayRevenue, 0, ',', '.') }}</p>
+                        <p class="mt-1 text-xl font-bold text-gray-900 dark:text-gray-100">Rp {{ number_format($todayRevenue, 0, ',', '.') }}</p>
                     </div>
                 </div>
 
