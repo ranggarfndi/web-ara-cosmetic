@@ -13,6 +13,20 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased">
-        {{ $slot }}
+        {{-- Tambahkan px-4 untuk padding kiri-kanan di layar kecil --}}
+        <div class="min-h-screen flex flex-col justify-center items-center py-6 bg-gray-100 dark:bg-gray-900 bg-gradient-to-br from-primary-100 to-violet-200 dark:from-primary-950 dark:to-violet-900 px-4">
+            
+            <div>
+                <a href="/">
+                    <h1 class="text-4xl font-bold text-primary-600 dark:text-white tracking-wider">
+                        ARA COSMETIC
+                    </h1>
+                </a>
+            </div>
+
+            <div class="w-full sm:max-w-md mt-6 px-6 py-8 bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl shadow-2xl overflow-hidden rounded-2xl border border-white/30 dark:border-gray-700/50">
+                {{ $slot }}
+            </div>
+        </div>
     </body>
 </html>
