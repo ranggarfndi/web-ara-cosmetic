@@ -10,7 +10,7 @@
                 class="bg-white dark:bg-gray-800/50 overflow-hidden shadow-sm rounded-2xl border border-gray-200 dark:border-gray-700">
                 <div class="p-6 md:p-8 text-gray-900 dark:text-gray-100">
 
-                    <form method="POST" action="{{ route('redeem.store') }}">
+                    <form method="POST" action="{{ route('redeem.store') }}" id="redeem-form">
                         @csrf
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
@@ -19,8 +19,7 @@
                                 <select name="customer_id" id="select-customer" class="block mt-1 w-full" required>
                                     <option value="">-- Pilih atau Cari Pelanggan --</option>
                                     @foreach ($customers as $customer)
-                                        <option value="{{ $customer->id }}" data-points="{{ $customer->total_points }}"
-                                            @selected(old('customer_id') == $customer->id)>
+                                        <option value="{{ $customer->id }}" @selected(old('customer_id') == $customer->id)>
                                             {{ $customer->name }} - ({{ $customer->phone_number }})
                                         </option>
                                     @endforeach
@@ -36,9 +35,7 @@
                                 <select name="redeem_option_id" id="select-redeem" class="block mt-1 w-full" required>
                                     <option value="">-- Pilih Hadiah --</option>
                                     @foreach ($redeemOptions as $option)
-                                        <option value="{{ $option->id }}"
-                                            data-points-required="{{ $option->points_required }}"
-                                            @selected(old('redeem_option_id') == $option->id)>
+                                        <option value="{{ $option->id }}" @selected(old('redeem_option_id') == $option->id)>
                                             {{ $option->name }} - (Butuh {{ $option->points_required }} Poin)
                                         </option>
                                     @endforeach
@@ -64,9 +61,13 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                // 1. Buat "kamus" data dari PHP
                 const customerPointsMap = {!! json_encode($customers->pluck('total_points', 'id')) !!};
+                const customerNamesMap = {!! json_encode($customers->pluck('name', 'id')) !!};
                 const redeemPointsMap = {!! json_encode($redeemOptions->pluck('points_required', 'id')) !!};
+                const redeemNamesMap = {!! json_encode($redeemOptions->pluck('name', 'id')) !!};
 
+                // 2. Fungsi aman untuk inisialisasi TomSelect
                 const initTomSelect = (selector) => {
                     const el = document.querySelector(selector);
                     if (el.tomselect) {
@@ -81,16 +82,17 @@
                     });
                 };
 
+                // 3. Inisialisasi & ambil elemen HTML
                 const customerSelect = initTomSelect("#select-customer");
                 const redeemSelect = initTomSelect("#select-redeem");
-
                 const customerPointsEl = document.getElementById('customer-points');
                 const submitButton = document.getElementById('submit-button');
+                const redeemForm = document.getElementById('redeem-form');
 
+                // 4. Fungsi untuk memeriksa poin & status tombol
                 function checkPoints() {
                     const customerId = customerSelect.getValue();
                     const redeemId = redeemSelect.getValue();
-
                     const customerPoints = customerPointsMap[customerId] || 0;
                     customerPointsEl.textContent = customerPoints.toLocaleString();
 
@@ -98,9 +100,7 @@
                         submitButton.disabled = true;
                         return;
                     }
-
                     const pointsRequired = redeemPointsMap[redeemId];
-
                     if (customerPoints >= pointsRequired) {
                         submitButton.disabled = false;
                     } else {
@@ -110,8 +110,37 @@
 
                 customerSelect.on('change', checkPoints);
                 redeemSelect.on('change', checkPoints);
-
                 checkPoints();
+
+                // 5. Logika untuk popup konfirmasi saat submit
+                redeemForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    const customerId = customerSelect.getValue();
+                    const redeemId = redeemSelect.getValue();
+
+                    // Ambil nama dari "kamus" yang kita buat
+                    const customerName = customerNamesMap[customerId] || 'Pelanggan';
+                    const rewardName = redeemNamesMap[redeemId] || 'Hadiah';
+                    const pointsRequired = redeemPointsMap[redeemId] || 0;
+
+                    if (!pointsRequired) return;
+
+                    Swal.fire({
+                        title: 'Konfirmasi Redeem',
+                        html: `Anda akan menukar <b>${pointsRequired.toLocaleString()} poin</b> milik <b>${customerName}</b> dengan hadiah:<br><br> <b>"${rewardName}"</b><br><br>Lanjutkan transaksi?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#e11d48',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Ya, Lanjutkan!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            redeemForm.submit();
+                        }
+                    });
+                });
             });
         </script>
     @endpush
