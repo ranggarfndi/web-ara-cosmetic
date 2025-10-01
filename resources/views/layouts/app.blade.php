@@ -17,7 +17,7 @@
 </head>
 
 <body class="font-sans antialiased" x-data="{ sidebarOpen: false }">
-    <div class="min-h-screen bg-gray-100 dark:bg-primary-950">
+    <div class="min-h-screen bg-gradient-to-br from-primary-100 to-violet-200 dark:from-primary-950 dark:to-violet-900">
 
         @include('layouts.sidebar')
 
