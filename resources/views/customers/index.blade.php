@@ -15,6 +15,7 @@
                             class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 active:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                             Tambah Pelanggan
                         </a>
+
                         <form method="GET" action="{{ route('customers.index') }}"
                             class="w-full md:w-auto flex flex-col sm:flex-row items-stretch gap-2">
                             <div>
@@ -57,7 +58,9 @@
                                     <th
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Ulang Tahun</th>
-                                    <th class="relative px-6 py-3"><span class="sr-only">Aksi</span></th>
+                                    <th
+                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -86,15 +89,17 @@
                                             {{ \Carbon\Carbon::parse($customer->birth_date)->format('d F') }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex justify-end items-center space-x-2">
-                                                <a href="{{ route('customers.show', $customer) }}" class="inline-flex items-center px-3 py-1.5 bg-violet-100 hover:bg-violet-200 dark:bg-violet-900/50 dark:hover:bg-violet-800 text-violet-800 dark:text-violet-300 text-xs font-medium rounded-md transition-colors">Detail</a>
+                                                <a href="{{ route('customers.show', $customer) }}"
+                                                    class="inline-flex items-center px-3 py-1.5 bg-violet-100 hover:bg-violet-200 dark:bg-violet-900/50 dark:hover:bg-violet-800 text-violet-800 dark:text-violet-300 text-xs font-medium rounded-md transition-colors">Detail</a>
                                                 <a href="{{ route('customers.edit', $customer) }}"
                                                     class="inline-flex items-center px-3 py-1.5 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/50 dark:hover:bg-blue-800 text-blue-800 dark:text-blue-300 text-xs font-medium rounded-md transition-colors">Edit</a>
                                                 <form action="{{ route('customers.destroy', $customer) }}"
-                                                    method="POST" onsubmit="return confirm('Apakah Anda yakin?');">
+                                                    method="POST">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit"
-                                                        class="inline-flex items-center px-3 py-1.5 bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/50 dark:hover:bg-orange-800 text-orange-800 dark:text-orange-300 text-xs font-medium rounded-md transition-colors">Delete</button>
+                                                    <button type="button"
+                                                        class="delete-button inline-flex items-center px-3 py-1.5 bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/50 dark:hover:bg-orange-800 text-orange-800 dark:text-orange-300 text-xs font-medium rounded-md transition-colors"
+                                                        data-customer-name="{{ $customer->name }}">Delete</button>
                                                 </form>
                                             </div>
                                         </td>
@@ -137,15 +142,16 @@
                                 </div>
                                 <div
                                     class="flex justify-end items-center space-x-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                                    <a href="{{ route('customers.show', $customer) }}" class="inline-flex items-center px-3 py-1.5 bg-violet-100 hover:bg-violet-200 dark:bg-violet-900/50 dark:hover:bg-violet-800 text-violet-800 dark:text-violet-300 text-xs font-medium rounded-md transition-colors">Detail</a>
+                                    <a href="{{ route('customers.show', $customer) }}"
+                                        class="inline-flex items-center px-3 py-1.5 bg-violet-100 hover:bg-violet-200 dark:bg-violet-900/50 dark:hover:bg-violet-800 text-violet-800 dark:text-violet-300 text-xs font-medium rounded-md transition-colors">Detail</a>
                                     <a href="{{ route('customers.edit', $customer) }}"
                                         class="inline-flex items-center px-3 py-1.5 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/50 dark:hover:bg-blue-800 text-blue-800 dark:text-blue-300 text-xs font-medium rounded-md transition-colors">Edit</a>
-                                    <form action="{{ route('customers.destroy', $customer) }}" method="POST"
-                                        onsubmit="return confirm('Apakah Anda yakin?');">
+                                    <form action="{{ route('customers.destroy', $customer) }}" method="POST">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit"
-                                            class="inline-flex items-center px-3 py-1.5 bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/50 dark:hover:bg-orange-800 text-orange-800 dark:text-orange-300 text-xs font-medium rounded-md transition-colors">Delete</button>
+                                        <button type="button"
+                                            class="delete-button inline-flex items-center px-3 py-1.5 bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/50 dark:hover:bg-orange-800 text-orange-800 dark:text-orange-300 text-xs font-medium rounded-md transition-colors"
+                                            data-customer-name="{{ $customer->name }}">Delete</button>
                                     </form>
                                 </div>
                             </div>
@@ -162,4 +168,32 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
+
+                    const customerName = this.getAttribute('data-customer-name');
+                    const form = this.closest('form');
+
+                    Swal.fire({
+                        title: 'Anda Yakin?',
+                        html: `Anda akan menghapus pelanggan bernama <b>${customerName}</b>. Tindakan ini tidak dapat dibatalkan.`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#e11d48',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Ya, Hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        </script>
+    @endpush
 </x-app-layout>
