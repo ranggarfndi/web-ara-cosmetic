@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Models\PointHistory;
+use App\Models\RedeemHistory;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class CustomerController extends Controller
 {
@@ -13,10 +16,9 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
-        // Query dasar untuk mengambil data pelanggan
         $query = Customer::query();
 
-        // Terapkan filter pencarian jika ada input 'search'
+        // Terapkan filter pencarian jika ada
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
@@ -25,10 +27,29 @@ class CustomerController extends Controller
             });
         }
 
-        // Ambil data, urutkan dari yang terbaru, dan tampilkan per halaman (paginasi)
-        $customers = $query->latest()->paginate(10);
+        // --- LOGIKA BARU UNTUK FILTER PENGURUTAN ---
+        $sort = $request->get('sort', 'latest'); // Defaultnya adalah 'latest'
+        switch ($sort) {
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'points_desc':
+                $query->orderBy('total_points', 'desc');
+                break;
+            case 'points_asc':
+                $query->orderBy('total_points', 'asc');
+                break;
+            default:
+                $query->latest(); // 'latest' = orderBy('created_at', 'desc')
+                break;
+        }
+        // --- SELESAI ---
 
-        // Kirim data ke view
+        $customers = $query->paginate(10);
+
         return view('customers.index', compact('customers'));
     }
 
@@ -66,7 +87,44 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer)
     {
-        //
+        // 1. Ambil riwayat penambahan poin HANYA untuk customer ini
+        $pointHistories = PointHistory::where('customer_id', $customer->id)
+            ->get()->map(function ($item) {
+                return (object) [
+                    'date' => $item->created_at,
+                    'description' => 'Penambahan Poin',
+                    'amount' => 'Rp ' . number_format($item->purchase_amount),
+                    'change' => '+' . $item->points_earned,
+                    'type' => 'credit',
+                ];
+            });
+
+        // 2. Ambil riwayat redeem HANYA untuk customer ini
+        $redeemHistories = RedeemHistory::where('customer_id', $customer->id)
+            ->with('redeemOption')->get()->map(function ($item) {
+                return (object) [
+                    'date' => $item->created_at,
+                    'description' => 'Redeem: ' . $item->redeemOption->name,
+                    'amount' => '',
+                    'change' => '-' . $item->points_spent,
+                    'type' => 'debit',
+                ];
+            });
+
+        // 3. Gabungkan, urutkan, dan paginasi (sama seperti di HistoryController)
+        $mergedHistories = $pointHistories->merge($redeemHistories);
+        $sortedHistories = $mergedHistories->sortByDesc('date');
+
+        $perPage = 10;
+        $currentPage = request()->get('page', 1);
+        $currentPageItems = $sortedHistories->slice(($currentPage - 1) * $perPage, $perPage)->all();
+        $histories = new LengthAwarePaginator($currentPageItems, count($sortedHistories), $perPage, $currentPage, [
+            'path' => request()->url(),
+            'query' => request()->query(),
+        ]);
+
+        // 4. Kirim data ke view baru
+        return view('customers.show', compact('customer', 'histories'));
     }
 
     /**
